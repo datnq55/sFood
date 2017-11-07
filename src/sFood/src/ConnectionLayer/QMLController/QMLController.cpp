@@ -1,7 +1,6 @@
 #include "QMLController.h"
 #include <QTextCodec>
 #include <QQmlEngine>
-#include "Logger.h"
 
 QMLController* QMLController::getInstance(SCREENTYPE_T type)
 {
@@ -81,7 +80,7 @@ bool QMLController::showScreen(QString scrName)
 
 void QMLController::showOSD(OSD_DATA* onsTbl)
 {
-    //DLT_HIGH << "onsTbl" << onsTbl;
+    //qDebug() << "onsTbl" << onsTbl;
     if(!p_mOnsData.isEmpty()){
         for(int cnt = 0; cnt < ONSCOUNT_MAX; cnt++)
         {

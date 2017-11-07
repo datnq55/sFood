@@ -1,7 +1,6 @@
 #include "ScrController.h"
 #include "QMLController.h"
 #include "CommonStructs.h"
-#include "Logger.h"
 
 ScrController* ScrController::getInstance(SCREENTYPE_T type)
 {
@@ -30,7 +29,7 @@ ScrController::~ScrController()
 
 void ScrController::qmlSendEvtKey(QVariant keyEvent, QVariant data)
 {
-    DLT_HIGH << "keyEvent" << keyEvent << "data" << data;
+    qDebug() << "keyEvent" << keyEvent << "data" << data;
     p_keyEvent = keyEvent;
     uint msgid = 0;
 

@@ -7,18 +7,19 @@ Window {
     height: 480
     title: qsTr("Hello World")
 
-    MainForm {
-        anchors.fill: parent
-        mouseArea.onClicked: {
-            Qt.quit();
-        }
-    }
+//    MainForm {
+//        anchors.fill: parent
+//        mouseArea.onClicked: {
+//            Qt.quit();
+//        }
+//    }
 
     Rectangle{
         width: 50
         height: 50
         color: "#ff0000"
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        //anchors.right: parent.right
+        //anchors.bottom: parent.bottom
+        anchors.centerIn: parent
     }
 }
