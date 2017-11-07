@@ -1,5 +1,4 @@
 #include "TimerConnection.h"
-#include "Logger.h"
 
 TimerConnection* TimerConnection::getInstance(SCREENTYPE_T type)
 {
@@ -75,7 +74,7 @@ void TimerConnection::reqShowOSDTimer(unsigned int onsid, unsigned int param)
 
 void TimerConnection::reqHideOSDCountDown(unsigned int onsid)
 {
-    DLT_HIGH << "onsid  " << onsid;
+    qDebug() << "onsid  " << onsid;
     /* Delete one-shot timer request for Onscreen management    */
     unsigned char timcnt;
     bool  deltimer = false;

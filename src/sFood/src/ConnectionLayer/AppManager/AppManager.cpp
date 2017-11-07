@@ -1,7 +1,6 @@
 #include "AppManager.h"
 #include "QMLController.h"
 #include "OnsController.h"
-#include "Logger.h"
 
 AppManager* AppManager::getInstance(SCREENTYPE_T type)
 {
@@ -34,7 +33,7 @@ SCREENTYPE_T AppManager::getScrenType()
 // Add msg to stack and transition screen
 bool AppManager::addMsgToQueue(uint msgID, QVariant data)
 {
-    DLT_HIGH << "msgID" <<msgID<< "data" << data;
+    qDebug() << "msgID" <<msgID<< "data" << data;
     return recieveMsgData(msgID, data);
 }
 
@@ -104,7 +103,7 @@ bool AppManager::recieveMsgData(uint msgID, QVariant data)
     MSG_INF msgInf;
     msgInf.eventID = msgID;
     msgInf.evtData = data;
-    DLT_HIGH << "emit screenTriggerHandled getScrenType()" << getScrenType() << "msgID" << msgID << "data" << data;
+    qDebug() << "emit screenTriggerHandled getScrenType()" << getScrenType() << "msgID" << msgID << "data" << data;
     emit screenTriggerHandled(getScrenType(), msgInf);
 
     return retValue;
@@ -146,7 +145,7 @@ bool AppManager::recieveReqChangeTopMsg(uint msgID, QVariant data)
         MSG_INF msgInf;
         msgInf.eventID = msgID;
         msgInf.evtData = data;
-        DLT_HIGH << "emit screenTriggerHandled getScrenType()" << getScrenType() << "msgID" << msgID << "data" << data;
+        qDebug() << "emit screenTriggerHandled getScrenType()" << getScrenType() << "msgID" << msgID << "data" << data;
         emit screenTriggerHandled(getScrenType(), msgInf);
     }
     return retValue;
@@ -174,7 +173,7 @@ bool AppManager::recieveReqInitStackHis(uint msgID, QVariant data)
                 MSG_INF msgInf;
                 msgInf.eventID = msgID;
                 msgInf.evtData = data;
-                DLT_HIGH << "emit screenTriggerHandled getScrenType()" << getScrenType() << "msgID" << msgID << "data" << data;
+                qDebug() << "emit screenTriggerHandled getScrenType()" << getScrenType() << "msgID" << msgID << "data" << data;
                 emit screenTriggerHandled(getScrenType(), msgInf);
             }
         }
@@ -192,13 +191,13 @@ bool AppManager::recieveReqInitScrCache(uint msgID, QVariant data)
 
 void AppManager::reqShowOnscreen(uint OnsID)
 {
-    DLT_HIGH << "OnsID " << OnsID;
+    qDebug() << "OnsID " << OnsID;
     OnsController::getInstance(getScrenType())->showOnscreen(OnsID);
 }
 
 void AppManager::reqHideOnscreen(uint OnsID)
 {
-    DLT_HIGH << "OnsID" << OnsID;
+    qDebug() << "OnsID" << OnsID;
     OnsController::getInstance(getScrenType())->hideOnscreen(OnsID);
 }
 

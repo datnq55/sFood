@@ -1,7 +1,6 @@
 #include "OnsController.h"
 #include "TimerConnection.h"
 #include "CommonStructs.h"
-#include "Logger.h"
 
 OnsController::OnsController(SCREENTYPE_T type): m_screen(type)
 {
@@ -122,7 +121,7 @@ void OnsController::hideOnscreen( unsigned int OnsID  )
 
 void OnsController::timeoutDeleteOnscreen(unsigned int OnsID)
 {
-    //DLT_HIGH << "OnsID " << OnsID;
+    //qDebug() << "OnsID " << OnsID;
     unsigned char onscnt;
 
     //Check a request onscreen to current onscreen table
