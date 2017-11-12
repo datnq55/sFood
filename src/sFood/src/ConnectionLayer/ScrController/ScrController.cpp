@@ -1,25 +1,14 @@
 #include "ScrController.h"
-#include "QMLController.h"
+#include "../QMLController/QMLController.h"
 #include "CommonStructs.h"
 
-ScrController* ScrController::getInstance(SCREENTYPE_T type)
+ScrController* ScrController::getInstance()
 {
-    if(FRONT_SCREEN == type){
-        static ScrController instanceFront(FRONT_SCREEN);
+        static ScrController instanceFront;
         return &instanceFront;
-    }
-    else{
-        static ScrController instanceRear(REAR_SCREEN);
-        return &instanceRear;
-    }
 }
 
-SCREENTYPE_T ScrController::getScrenType()
-{
-    return m_screen;
-}
-
-ScrController::ScrController(SCREENTYPE_T type) : m_screen(type)
+ScrController::ScrController()
 {
 }
 
@@ -29,7 +18,6 @@ ScrController::~ScrController()
 
 void ScrController::qmlSendEvtKey(QVariant keyEvent, QVariant data)
 {
-    qDebug() << "keyEvent" << keyEvent << "data" << data;
     p_keyEvent = keyEvent;
     uint msgid = 0;
 
@@ -43,7 +31,7 @@ void ScrController::qmlSendEvtKey(QVariant keyEvent, QVariant data)
     {
         //Nothing
     }
-    AppManager::getInstance(getScrenType())->addMsgToQueue(msgid, data);
+    AppManager::getInstance()->addMsgToQueue(msgid, data);
 }
 
 void ScrController::qmlChangeTopMsg(QVariant keyEvent, QVariant data)
@@ -61,7 +49,7 @@ void ScrController::qmlChangeTopMsg(QVariant keyEvent, QVariant data)
     {
         //Nothing
     }
-    AppManager::getInstance(getScrenType())->reqChangeTopMsg(msgid, data);
+    AppManager::getInstance()->reqChangeTopMsg(msgid, data);
 }
 
 void ScrController::qmlInitStackHis(QVariant keyEvent, QVariant data)
@@ -79,7 +67,7 @@ void ScrController::qmlInitStackHis(QVariant keyEvent, QVariant data)
     {
         //Nothing
     }
-    AppManager::getInstance(getScrenType())->reqInitStackHis(msgid, data);
+    AppManager::getInstance()->reqInitStackHis(msgid, data);
 }
 
 void ScrController::qmlInitScrCache(QVariant keyEvent, QVariant data)
@@ -97,17 +85,22 @@ void ScrController::qmlInitScrCache(QVariant keyEvent, QVariant data)
     {
         //Nothing
     }
-    AppManager::getInstance(getScrenType())->reqInitScrCache(msgid, data);
+    AppManager::getInstance()->reqInitScrCache(msgid, data);
+}
+
+void ScrController::reqTrimComponentCached()
+{
+    AppManager::getInstance()->reqTrimComponentCached();
 }
 
 
 void ScrController::registerScreen(QObject* scr)
 {
-    AppManager::getInstance(getScrenType())->addObjectFocus(scr);
+    AppManager::getInstance()->addObjectFocus(scr);
 }
 
 void ScrController::unRegisterScreen(QObject* scr)
 {
-    AppManager::getInstance(getScrenType())->remObjectFocus(scr);
+    AppManager::getInstance()->remObjectFocus(scr);
 }
 

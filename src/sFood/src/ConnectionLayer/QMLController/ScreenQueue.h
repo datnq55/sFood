@@ -7,7 +7,7 @@
 #include <QQmlContext>
 #include <QSharedPointer>
 
-#define MAX_DEEP_LIMIT 2
+#define MAX_DEEP_LIMIT 10
 typedef QSharedPointer<QQmlComponent> QQmlComponentPtr;
 struct SCREEN_T{
     QString scrName;

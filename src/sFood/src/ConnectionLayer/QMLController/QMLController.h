@@ -5,10 +5,10 @@
 
 #include <QQuickItem>
 #include <QQmlContext>
-#include "qtquick2applicationviewer.h"
+#include <QQuickView>
 #include <QVariantList>
 #include <QMap>
-#include "CommonStructs.h"
+#include "../ScrController/CommonStructs.h"
 #include "ScreenQueue.h"
 
 
@@ -16,30 +16,31 @@ class QMLController : public QObject
 {
     Q_OBJECT
 public:
-    static QMLController* getInstance(SCREENTYPE_T type);
+    static QMLController* getInstance();
     QMLController(QMLController const&)   = delete;
     void operator=(QMLController const&)  = delete;
 
-    bool construct(QtQuick2ApplicationViewer *viewer);
-    QtQuick2ApplicationViewer * getViewer();
+    bool construct(QQuickView *viewer);
+    QQuickView * getViewer();
     bool showScreen(QString scrName);
     void showOSD(OSD_DATA* onsTbl);
-
+    void reqTrimComponentCached();
     void initCachedScreen();
+signals:
+    void scrHistoryChanged();
 private slots:
     void slotVisibleChanged(bool state);
 private:
-    explicit QMLController(SCREENTYPE_T type);
+    explicit QMLController();
     virtual ~QMLController();
 
     QQmlComponentPtr getComponent(QObject *parent, QString screen);
-    SCREENTYPE_T getScrenType();
-    SCREENTYPE_T m_screen;
     QVariantList p_mOnsData;
     ScreenQueue cacheScreen;
 
     bool	initialized;
-    QtQuick2ApplicationViewer *viewer;
+    QQuickView *viewer;
     QObject* root_Obj;
+    void collectGarbage();
 };
 #endif // QMLCONTROLLER_H

@@ -2,41 +2,28 @@
 #include "TimerConnection.h"
 #include "CommonStructs.h"
 
-OnsController::OnsController(SCREENTYPE_T type): m_screen(type)
+OnsController::OnsController()
 {
-    unsigned char onscnt;
-
     /* Private Onscreen table initialize */
-    for(onscnt = 0; onscnt < ONSCOUNT_MAX; onscnt++)
+    for(int onscnt = 0; onscnt < ONSCOUNT_MAX; onscnt++)
     {
         //Clear current onscreen
-        CurrentshowOnsTbl[onscnt].OnscreenID = ONSID_MAX;
+        CurrentshowOnsTbl[onscnt].OnscreenID = ONSID_BLANK;
         CurrentshowOnsTbl[onscnt].DspTimer = 0;
         CurrentshowOnsTbl[onscnt].OnsType = 0;
         CurrentshowOnsTbl[onscnt].QmlPath = "";
     }
 }
 
-OnsController* OnsController::getInstance(SCREENTYPE_T type)
+OnsController* OnsController::getInstance()
 {
-    if(FRONT_SCREEN == type){
-        static OnsController instanceFront(FRONT_SCREEN);
+        static OnsController instanceFront;
         return &instanceFront;
-    }
-    else{
-        static OnsController instanceRear(REAR_SCREEN);
-        return &instanceRear;
-    }
 }
 
 OnsController::~OnsController()
 {
-}
 
-
-SCREENTYPE_T OnsController::getScrenType()
-{
-    return m_screen;
 }
 
 void OnsController::showOnscreen(unsigned int OnsID )
@@ -47,7 +34,7 @@ void OnsController::showOnscreen(unsigned int OnsID )
         //Stack a request onscreen to current onscreen table
         for(onscnt = 0; onscnt < ONSCOUNT_MAX; onscnt++)
         {
-            if(CurrentshowOnsTbl[onscnt].OnscreenID == ONSID_MAX )
+            if(CurrentshowOnsTbl[onscnt].OnscreenID == ONSID_BLANK )
             {
                 //Stack new onscreen
                 CurrentshowOnsTbl[onscnt].OnscreenID    = selectedOns.OnscreenID;
@@ -56,18 +43,17 @@ void OnsController::showOnscreen(unsigned int OnsID )
                 CurrentshowOnsTbl[onscnt].QmlPath       = selectedOns.QmlPath;
 
                 //Call to FormCtrl function
-                QMLController::getInstance(getScrenType())->showOSD(CurrentshowOnsTbl);
+                QMLController::getInstance()->showOSD(CurrentshowOnsTbl);
                 //Call to timer function
                 if(CurrentshowOnsTbl[onscnt].DspTimer != ONSFOREVER)
                 {
-                    TimerConnection::getInstance(getScrenType())->reqShowOSDTimer(CurrentshowOnsTbl[onscnt].OnscreenID,CurrentshowOnsTbl[onscnt].DspTimer );
+                    TimerConnection::getInstance()->reqShowOSDTimer(CurrentshowOnsTbl[onscnt].OnscreenID,CurrentshowOnsTbl[onscnt].DspTimer );
                 }
 
-                onsHistory.push(OnsID);
+                updateOnsHistory(OnsID, ONS_NOTICE::ONS_ADD_ONE);
                 break;
             }
-            //Requested Onscreen has already displayed
-            else if(CurrentshowOnsTbl[onscnt].OnscreenID== OnsID)
+            else if(CurrentshowOnsTbl[onscnt].OnscreenID== OnsID) //Requested Onscreen has already displayed
             {
                 break;
             }
@@ -85,12 +71,12 @@ void OnsController::deleteAllOSD()
         }
         else
         {
-            TimerConnection::getInstance(getScrenType())->reqHideOSDCountDown(CurrentshowOnsTbl[onscnt].OnscreenID);
+            TimerConnection::getInstance()->reqHideOSDCountDown(CurrentshowOnsTbl[onscnt].OnscreenID);
         }
     }
 
     if(!onsHistory.isEmpty()){
-        onsHistory.clear();
+        updateOnsHistory(0, ONS_NOTICE::ONS_REMOVE_ALL);
     }
 }
 
@@ -108,20 +94,19 @@ void OnsController::hideOnscreen( unsigned int OnsID  )
             }
             else
             {
-                TimerConnection::getInstance(getScrenType())->reqHideOSDCountDown(OnsID);
+                TimerConnection::getInstance()->reqHideOSDCountDown(OnsID);
             }
             break;
         }
     }
 
     if(!onsHistory.isEmpty()){
-        onsHistory.removeOne(OnsID);
+        updateOnsHistory(OnsID, ONS_NOTICE::ONS_REMOVE_ONE);
     }
 }
 
 void OnsController::timeoutDeleteOnscreen(unsigned int OnsID)
 {
-    //qDebug() << "OnsID " << OnsID;
     unsigned char onscnt;
 
     //Check a request onscreen to current onscreen table
@@ -131,7 +116,7 @@ void OnsController::timeoutDeleteOnscreen(unsigned int OnsID)
         if(CurrentshowOnsTbl[onscnt].OnscreenID == OnsID)
         {
             //Clear current onscreen
-            CurrentshowOnsTbl[onscnt].OnscreenID = ONSID_MAX;
+            CurrentshowOnsTbl[onscnt].OnscreenID = ONSID_BLANK;
             CurrentshowOnsTbl[onscnt].DspTimer = 0;
             CurrentshowOnsTbl[onscnt].OnsType = 0;
             CurrentshowOnsTbl[onscnt].QmlPath = "";
@@ -140,10 +125,10 @@ void OnsController::timeoutDeleteOnscreen(unsigned int OnsID)
             setOnscreenTbl();
 
             //Call to FormCtrl function
-            QMLController::getInstance(getScrenType())->showOSD(CurrentshowOnsTbl);
+            QMLController::getInstance()->showOSD(CurrentshowOnsTbl);
 
             if(!onsHistory.isEmpty()){
-                onsHistory.removeOne(OnsID);
+                updateOnsHistory(OnsID, ONS_NOTICE::ONS_REMOVE_ONE);
             }
         }
     }
@@ -154,24 +139,39 @@ QStack<uint> OnsController::getListOnsShowing()
     return onsHistory;
 }
 
+void OnsController::updateOnsHistory(uint onsID, ONS_NOTICE act)
+{
+    switch (act) {
+    case ONS_NOTICE::ONS_ADD_ONE :
+        onsHistory.push(onsID);
+        break;
+    case ONS_NOTICE::ONS_REMOVE_ONE :
+        if(onsHistory.contains(onsID)){
+            onsHistory.removeOne(onsID);
+        }
+        break;
+    case ONS_NOTICE::ONS_REMOVE_ALL :
+        if(!onsHistory.isEmpty()){
+            onsHistory.clear();
+        }
+        break;
+    default:
+        break;
+    }
+    emit onsHistoryChanged();
+}
+
 bool OnsController::getOnscreenInfo( unsigned int OnsID)
 {
     bool ret = false;
-    int cnt = 0;
-
-    while (maptableOnsManager[cnt].OnscreenID != ONSID_MAX)
-    {
-
-        /* Onscreen ID matched */
+    for (size_t cnt = 0; cnt < _onsIDcnt; cnt++) {
         if(maptableOnsManager[cnt].OnscreenID == OnsID)
         {
             selectedOns = maptableOnsManager[cnt];
             ret = true;
             break;
         }
-        cnt++;
     }
-
     return ret;
 }
 
@@ -184,7 +184,7 @@ void OnsController::setOnscreenTbl()
     for(cnt = 0; cnt < ONSCOUNT_MAX ; cnt++ )
     {
         //Find blank data
-        if(CurrentshowOnsTbl[cnt].OnscreenID == ONSID_MAX)
+        if(CurrentshowOnsTbl[cnt].OnscreenID == ONSID_BLANK)
         {
             //Shift Onscreen data up to max size
             for(sftcnt = cnt; sftcnt < ONSCOUNT_MAX-1; sftcnt++)
@@ -196,8 +196,6 @@ void OnsController::setOnscreenTbl()
                 CurrentshowOnsTbl[sftcnt].QmlPath = CurrentshowOnsTbl[sftcnt+1].QmlPath;
             }
         }
-
     }
-
 }
 

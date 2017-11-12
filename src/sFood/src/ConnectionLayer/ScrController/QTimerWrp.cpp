@@ -1,7 +1,7 @@
 #include "QTimerWrap.h"
 #include "TimerConnection.h"
 
-QTimerWrap::QTimerWrap(int type, unsigned int  targetID): m_screen(type)
+QTimerWrap::QTimerWrap(unsigned int  targetID)
 {
     p_targetID = targetID;
 }
@@ -15,5 +15,5 @@ void QTimerWrap::timeout_exec()
     /* timeout slot function */
     this->stop();
 
-    TimerConnection::getInstance((SCREENTYPE_T)m_screen)->timout_OnsTimer(p_targetID);
+    TimerConnection::getInstance()->timout_OnsTimer(p_targetID);
 }

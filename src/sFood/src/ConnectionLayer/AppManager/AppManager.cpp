@@ -1,23 +1,20 @@
 #include "AppManager.h"
-#include "QMLController.h"
-#include "OnsController.h"
+#include "../QMLController/QMLController.h"
+#include "../ScrController/OnsController.h"
+//#include "AppHomeModel.h"
+//#include "View/AppHome_ScreenDefs.h"
 
-AppManager* AppManager::getInstance(SCREENTYPE_T type)
+AppManager* AppManager::getInstance()
 {
-    if(FRONT_SCREEN == type){
-        static AppManager instanceFront(FRONT_SCREEN);
-        return &instanceFront;
-    }
-    else{
-        static AppManager instanceRear(REAR_SCREEN);
-        return &instanceRear;
-    }
+    static AppManager instanceFront;
+    return &instanceFront;
 }
 
-AppManager::AppManager(SCREENTYPE_T type): m_screen(type)
+AppManager::AppManager()
 {
     qRegisterMetaType<MSG_INF>("MSG_INF");
-    qRegisterMetaType<SCREENTYPE_T>("SCREENTYPE_T");
+    QObject::connect(OnsController::getInstance(), SIGNAL(onsHistoryChanged()), this, SIGNAL(onsHistoryChanged()));
+    QObject::connect(QMLController::getInstance(), SIGNAL(scrHistoryChanged()), this, SIGNAL(scrHistoryChanged()));
 }
 
 AppManager::~AppManager()
@@ -25,15 +22,9 @@ AppManager::~AppManager()
 
 }
 
-SCREENTYPE_T AppManager::getScrenType()
-{
-    return m_screen;
-}
-
 // Add msg to stack and transition screen
 bool AppManager::addMsgToQueue(uint msgID, QVariant data)
 {
-    qDebug() << "msgID" <<msgID<< "data" << data;
     return recieveMsgData(msgID, data);
 }
 
@@ -41,6 +32,12 @@ bool AppManager::addMsgToQueue(uint msgID, QVariant data)
 bool AppManager::reqChangeTopMsg(uint msgID, QVariant data)
 {
     return recieveReqChangeTopMsg(msgID, data);
+}
+
+// Clears the screen history stack
+void AppManager::clearScrHistoryStack()
+{
+    scrHistory.clear();
 }
 
 // Init stack history screen
@@ -71,23 +68,26 @@ bool AppManager::recieveMsgData(uint msgID, QVariant data)
                 // Pop event in stackview history
                 if(scrHistory.length() > 1){
                     scrHistory.pop();
+                    qDebug() << "FPT-Debug: pop to history Qstack, total = " << scrHistory.length();
                     evtID = scrHistory.top();
-                    OnsController::getInstance(getScrenType())->deleteAllOSD();
-                    retValue = QMLController::getInstance(getScrenType())->showScreen(evtTranstion[evtID].toForm);
+                    OnsController::getInstance()->deleteAllOSD();
+                    retValue = QMLController::getInstance()->showScreen(evtTranstion[evtID].toForm);
                 }
             }
             else{
                 // Push event to stackview history
                 scrHistory.push(msgID);
+                qDebug() << "FPT-Debug: Push to history Qstack" << scrHistory.length();
                 if(NULL != evtTranstion[msgID].func){
-                    evtTranstion[msgID].func(data, (int)getScrenType());
+                    evtTranstion[msgID].func(data);
                 }
                 evtID = scrHistory.top();
-                OnsController::getInstance(getScrenType())->deleteAllOSD();
-                retValue = QMLController::getInstance(getScrenType())->showScreen(evtTranstion[evtID].toForm);
+                OnsController::getInstance()->deleteAllOSD();
+                retValue = QMLController::getInstance()->showScreen(evtTranstion[evtID].toForm);
             }
         }
     }
+
     // Is operation event
     if(!evtOperation.empty())
     {
@@ -95,7 +95,7 @@ bool AppManager::recieveMsgData(uint msgID, QVariant data)
         {
             // Call function callback
             if(NULL != evtOperation[msgID].func){
-                evtOperation[msgID].func(data, (int)getScrenType());
+                evtOperation[msgID].func(data);
             }
         }
     }
@@ -103,8 +103,7 @@ bool AppManager::recieveMsgData(uint msgID, QVariant data)
     MSG_INF msgInf;
     msgInf.eventID = msgID;
     msgInf.evtData = data;
-    qDebug() << "emit screenTriggerHandled getScrenType()" << getScrenType() << "msgID" << msgID << "data" << data;
-    emit screenTriggerHandled(getScrenType(), msgInf);
+    emit screenTriggerHandled(msgInf);
 
     return retValue;
 }
@@ -125,28 +124,31 @@ bool AppManager::recieveReqChangeTopMsg(uint msgID, QVariant data)
             }
             // Push event to stackview
             scrHistory.push(msgID);
+            qDebug() << "FPT-Debug: Push to history Qstack" << scrHistory.length();
+
         }
         else {
             scrHistory.push(msgID);
+            qDebug() << "FPT-Debug: Push to history Qstack" << scrHistory.length();
+
         }
 
         // Call back funtion trigger
         if(NULL != evtTranstion[msgID].func){
-            evtTranstion[msgID].func(data, (int)getScrenType());
+            evtTranstion[msgID].func(data);
         }
 
         // Get screen of top
         evtID = scrHistory.top();
 
         // Show screen
-        OnsController::getInstance(getScrenType())->deleteAllOSD();
-        retValue = QMLController::getInstance(getScrenType())->showScreen(evtTranstion[evtID].toForm);
+        OnsController::getInstance()->deleteAllOSD();
+        retValue = QMLController::getInstance()->showScreen(evtTranstion[evtID].toForm);
 
         MSG_INF msgInf;
         msgInf.eventID = msgID;
         msgInf.evtData = data;
-        qDebug() << "emit screenTriggerHandled getScrenType()" << getScrenType() << "msgID" << msgID << "data" << data;
-        emit screenTriggerHandled(getScrenType(), msgInf);
+        emit screenTriggerHandled(msgInf);
     }
     return retValue;
 }
@@ -160,6 +162,7 @@ bool AppManager::recieveReqInitStackHis(uint msgID, QVariant data)
         if(evtTranstion.contains(msgID))
         {
             // Push event to stackview
+            qDebug() << "FPT-Debug: Push to history Qstack" << scrHistory.length();
             scrHistory.push(msgID);
 
             // Get screen of top
@@ -167,14 +170,13 @@ bool AppManager::recieveReqInitStackHis(uint msgID, QVariant data)
 
             if(evtID != current.top()){
                 // Show screen
-                OnsController::getInstance(getScrenType())->deleteAllOSD();
-                QMLController::getInstance(getScrenType())->showScreen(evtTranstion[evtID].toForm);
+                OnsController::getInstance()->deleteAllOSD();
+                QMLController::getInstance()->showScreen(evtTranstion[evtID].toForm);
 
                 MSG_INF msgInf;
                 msgInf.eventID = msgID;
                 msgInf.evtData = data;
-                qDebug() << "emit screenTriggerHandled getScrenType()" << getScrenType() << "msgID" << msgID << "data" << data;
-                emit screenTriggerHandled(getScrenType(), msgInf);
+                emit screenTriggerHandled(msgInf);
             }
         }
         current.clear();
@@ -185,25 +187,33 @@ bool AppManager::recieveReqInitStackHis(uint msgID, QVariant data)
 
 bool AppManager::recieveReqInitScrCache(uint msgID, QVariant data)
 {
-    QMLController::getInstance(getScrenType())->initCachedScreen();
+    Q_UNUSED(msgID)
+    Q_UNUSED(data)
+    QMLController::getInstance()->initCachedScreen();
     return true;
 }
 
 void AppManager::reqShowOnscreen(uint OnsID)
 {
-    qDebug() << "OnsID " << OnsID;
-    OnsController::getInstance(getScrenType())->showOnscreen(OnsID);
+    OnsController::getInstance()->showOnscreen(OnsID);
+//    if(OnsID != ONSID_HOME_OPTION_MENU)
+//    {
+//        AppHomeModel::instance()->setIsOnScrShowing(true);
+//    }
 }
 
 void AppManager::reqHideOnscreen(uint OnsID)
 {
-    qDebug() << "OnsID" << OnsID;
-    OnsController::getInstance(getScrenType())->hideOnscreen(OnsID);
+    OnsController::getInstance()->hideOnscreen(OnsID);
+//    if(OnsID != ONSID_HOME_OPTION_MENU)
+//    {
+//        AppHomeModel::instance()->setIsOnScrShowing(false);
+//    }
 }
 
 QStack<uint> AppManager::getOnscreenHistory()
 {
-    return OnsController::getInstance(getScrenType())->getListOnsShowing();
+    return OnsController::getInstance()->getListOnsShowing();
 }
 
 QStack<uint> AppManager::getScreenHistory(){
@@ -212,27 +222,42 @@ QStack<uint> AppManager::getScreenHistory(){
 
 void AppManager::reqEvtHardKeyHandler(int e, int data)
 {
-    emit AppManager::getInstance(getScrenType())->eventHardKeyHandler(e, data);
+    emit AppManager::getInstance()->eventHardKeyHandler(e, data);
 }
 
 void AppManager::reqRefreshDisp(){
     if(scrHistory.length() > 0){
         int evtID = scrHistory.top();
-        QMLController::getInstance(getScrenType())->showScreen(evtTranstion[evtID].toForm);
+        QMLController::getInstance()->showScreen(evtTranstion[evtID].toForm);
     }
+
+    QList<uint> currentOns = getOnscreenHistory().toList();
+    if(!currentOns.isEmpty())
+    {
+        OnsController::getInstance()->deleteAllOSD();
+        for (int i = 0; i < currentOns.count(); i++) {
+            reqShowOnscreen(currentOns[i]);
+        }
+    }
+}
+
+void AppManager::reqTrimComponentCached()
+{
+    QMLController::getInstance()->reqTrimComponentCached();
 }
 
 void AppManager::addObjectFocus(QObject* obj)
 {
     _fObj.insert(0, obj);
     for (QObject* obj: _fObj) {
-        QObject::disconnect(AppManager::getInstance(getScrenType()), SIGNAL(eventHardKeyHandler(int, int)),
+        QObject::disconnect(AppManager::getInstance(), SIGNAL(eventHardKeyHandler(int, int)),
                             obj, SIGNAL(eventHardKeyHandler(int, int)));
         // Set property isOnTop = false
         obj->setProperty("isOnTop", false);
     }
-    QObject::connect(AppManager::getInstance(getScrenType()), SIGNAL(eventHardKeyHandler(int, int)),
+    QObject::connect(AppManager::getInstance(), SIGNAL(eventHardKeyHandler(int, int)),
                      _fObj.first(), SIGNAL(eventHardKeyHandler(int, int)));
+
     // Set property isOnTop = true
     _fObj.first()->setProperty("isOnTop", true);
 }
@@ -243,15 +268,24 @@ void AppManager::remObjectFocus(QObject* obj)
 
     if(_fObj.count() > 0){
         for (QObject* obj: _fObj) {
-            QObject::disconnect(AppManager::getInstance(getScrenType()), SIGNAL(eventHardKeyHandler(int, int)),
+            QObject::disconnect(AppManager::getInstance(), SIGNAL(eventHardKeyHandler(int, int)),
                                 obj, SIGNAL(eventHardKeyHandler(int, int)));
+
             // Set property isOnTop = false
             obj->setProperty("isOnTop", false);
         }
-        QObject::connect(AppManager::getInstance(getScrenType()), SIGNAL(eventHardKeyHandler(int, int)),
+        QObject::connect(AppManager::getInstance(), SIGNAL(eventHardKeyHandler(int, int)),
                          _fObj.first(), SIGNAL(eventHardKeyHandler(int, int)));
-    }
 
-    // Set property isOnTop = true
-    _fObj.first()->setProperty("isOnTop", true);
+        // Set property isOnTop = true
+        _fObj.first()->setProperty("isOnTop", true);
+    }
+}
+
+void AppManager::clearTopScreenStack()
+{
+    if( !scrHistory.isEmpty() )
+    {
+        scrHistory.pop();
+    }
 }

@@ -2,12 +2,12 @@
 #define COMMON_STRUCT
 #include <QObject>
 #include "QTimerWrap.h"
-#define CB_FUNC(funcname) void (*funcname)(QVariant msg, int scrType)
-#define ONSCOUNT_MAX            10
-
+#define SAFE_DELETE(p) { if (p) { delete (p); (p) = NULL; } }
+#define CB_FUNC(funcname) void (*funcname)(QVariant msg)
+#define ONSCOUNT_MAX            4      // Support maximum is 10 ons showing at the same time (equals count of ons loader on qml)
 #define TIMER_SET_MAX           50
 #define ONS_DELTIMER_MAX        10
-#define ONSID_MAX               65535
+#define ONSID_BLANK             65535
 #define EVT_TRANS_BACK          65535
 #define ONSFOREVER              0
 #define ONS_DUR_5_SEC           5000
@@ -44,11 +44,11 @@ typedef struct ons_timer_ctrl
     QTimerWrap* onstimtbl;
 } ONS_TIMER_CTRL;
 
-enum SCREENTYPE_T : int {
-    FRONT_SCREEN = 0,
-    REAR_SCREEN,
-    SCREENTYPE_MAX
-};
+//enum SCREENTYPE_T {
+//    FRONT_SCREEN = 0,
+//    REAR_SCREEN,
+//    SCREENTYPE_MAX
+//};
 
 // For local popup
 enum ENUM_LOCAL_ONS {
@@ -64,11 +64,13 @@ typedef enum
 } eLayerId;
 
 // Onscreen manager table //
-extern OSD_DATA maptableOnsManager[ONSID_MAX];
+extern OSD_DATA maptableOnsManager[];
 
 
 // Screen manager table //
 extern QMap<uint, EVT_TRIGGER> evtOperation;
 extern QMap<uint, EVT_TRIGGER> evtTranstion;
+
+extern size_t _onsIDcnt;
 
 #endif //COMMON_STRUCT

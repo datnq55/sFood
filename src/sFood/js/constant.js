@@ -1,0 +1,1 @@
+var HEADER_HEIGHT = 180

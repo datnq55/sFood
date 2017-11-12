@@ -12,7 +12,7 @@ class ScrController : public QObject
 
 public:
     //Singleton model    
-    static ScrController* getInstance(SCREENTYPE_T type);
+    static ScrController* getInstance();
     ScrController(ScrController const&)   = delete;
     void operator=(ScrController const&)  = delete;
 
@@ -21,13 +21,13 @@ public:
     Q_INVOKABLE void qmlInitStackHis(QVariant keyEvent, QVariant data = QVariant());
     Q_INVOKABLE void qmlInitScrCache(QVariant keyEvent, QVariant data = QVariant());
 
+    Q_INVOKABLE void reqTrimComponentCached();
+
     Q_INVOKABLE void registerScreen(QObject* scr);
     Q_INVOKABLE void unRegisterScreen(QObject* scr);
 private:
-    explicit ScrController(SCREENTYPE_T type);
+    explicit ScrController();
     virtual ~ScrController();
     QVariant p_keyEvent;      //Key event from QML data
-    SCREENTYPE_T getScrenType();
-    SCREENTYPE_T m_screen;
 };
 #endif // ScrController_H

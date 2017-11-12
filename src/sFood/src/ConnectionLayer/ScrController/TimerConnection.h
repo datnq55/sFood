@@ -13,7 +13,7 @@ class TimerConnection: public QObject
 public:
 
     //Singleton model
-    static TimerConnection* getInstance(SCREENTYPE_T type);
+    static TimerConnection* getInstance();
     TimerConnection(TimerConnection const&) = delete;
     void operator=(TimerConnection const&)  = delete;
 
@@ -22,7 +22,7 @@ public:
     void timout_OnsTimer(unsigned int onsid);
 
 private:
-    explicit TimerConnection(SCREENTYPE_T type);
+    explicit TimerConnection();
     virtual ~TimerConnection();
     void setOnsTimerTbl(void);                                                                  /* Create Onscreen timer table */
 
@@ -32,7 +32,5 @@ private:
    unsigned char timSetPos;
    unsigned char onsTimSetPos;
 
-   SCREENTYPE_T getScrenType();
-   SCREENTYPE_T m_screen;
 };
 #endif // TIMERONSCONTROLLER_H

@@ -1,18 +1,13 @@
 #include "TimerConnection.h"
+//#include "AppHomeModel.h"
 
-TimerConnection* TimerConnection::getInstance(SCREENTYPE_T type)
+TimerConnection* TimerConnection::getInstance()
 {
-    if(FRONT_SCREEN == type){
-        static TimerConnection instanceFront(FRONT_SCREEN);
+        static TimerConnection instanceFront;
         return &instanceFront;
-    }
-    else{
-        static TimerConnection instanceRear(REAR_SCREEN);
-        return &instanceRear;
-    }
 }
 
-TimerConnection::TimerConnection(SCREENTYPE_T type) : m_screen(type)
+TimerConnection::TimerConnection()
 {
     timSetPos = 0;
     onsTimSetPos = 0;
@@ -20,19 +15,13 @@ TimerConnection::TimerConnection(SCREENTYPE_T type) : m_screen(type)
     /* Private Onscreen table initialize */
     for(unsigned int timcnt = 0; timcnt < ONSCOUNT_MAX; timcnt++)
     {
-        mng_OnsTimer[timcnt].onsID = ONSID_MAX;
+        mng_OnsTimer[timcnt].onsID = ONSID_BLANK;
         mng_OnsTimer[timcnt].timer_param = 0;
     }
-
 }
 
 TimerConnection::~TimerConnection()
 {
-}
-
-SCREENTYPE_T TimerConnection::getScrenType()
-{
-    return m_screen;
 }
 
 void TimerConnection::reqShowOSDTimer(unsigned int onsid, unsigned int param)
@@ -61,7 +50,7 @@ void TimerConnection::reqShowOSDTimer(unsigned int onsid, unsigned int param)
         mng_OnsTimer[onsTimSetPos].timer_param = param;
 
         //Timer new
-        mng_OnsTimer[onsTimSetPos].onstimtbl = new QTimerWrap((int)getScrenType(), onsid);
+        mng_OnsTimer[onsTimSetPos].onstimtbl = new QTimerWrap(onsid);
         //SIGNAL-SLOT connection
         QObject::connect(mng_OnsTimer[onsTimSetPos].onstimtbl , SIGNAL(timeout()),mng_OnsTimer[onsTimSetPos].onstimtbl, SLOT(timeout_exec()));
         //Timer start
@@ -74,7 +63,6 @@ void TimerConnection::reqShowOSDTimer(unsigned int onsid, unsigned int param)
 
 void TimerConnection::reqHideOSDCountDown(unsigned int onsid)
 {
-    qDebug() << "onsid  " << onsid;
     /* Delete one-shot timer request for Onscreen management    */
     unsigned char timcnt;
     bool  deltimer = false;
@@ -93,10 +81,10 @@ void TimerConnection::reqHideOSDCountDown(unsigned int onsid)
     /* Delete timer  */
     if(deltimer == true)
     {
-        OnsController::getInstance(getScrenType())->timeoutDeleteOnscreen(mng_OnsTimer[timcnt].onsID);
+        OnsController::getInstance()->timeoutDeleteOnscreen(mng_OnsTimer[timcnt].onsID);
 
         //To delete timer parameter to timer management table
-        mng_OnsTimer[timcnt].onsID = ONSID_MAX;
+        mng_OnsTimer[timcnt].onsID = ONSID_BLANK;
         mng_OnsTimer[timcnt].timer_param = 0;
 
         //Timer stop (make sure)
@@ -115,6 +103,8 @@ void TimerConnection::reqHideOSDCountDown(unsigned int onsid)
 void TimerConnection::timout_OnsTimer(unsigned int onsid)
 {
     //Timer clear
+//20170622005
+    //AppHomeModel::instance()->setIsOnScrShowing(false);
     reqHideOSDCountDown(onsid);
 
 }
@@ -127,7 +117,7 @@ void TimerConnection::setOnsTimerTbl(void)
     for(cnt = 0; cnt < onsTimSetPos ; cnt++ )
     {
         //Find blank data
-        if(mng_OnsTimer[cnt].onsID == ONSID_MAX)
+        if(mng_OnsTimer[cnt].onsID == ONSID_BLANK)
         {
             //Shift timer data up to max size
             for(sftcnt = cnt; sftcnt < onsTimSetPos; sftcnt++)

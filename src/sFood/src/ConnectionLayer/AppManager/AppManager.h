@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QVariant>
 #include <QStack>
-#include "CommonStructs.h"
+#include "../ScrController/CommonStructs.h"
 
 struct MSG_INF{
     uint eventID;
@@ -23,7 +23,7 @@ class AppManager: public QObject
     Q_OBJECT
 public:
     //Singleton model
-    static AppManager *getInstance(SCREENTYPE_T type);
+    static AppManager *getInstance();
     AppManager(AppManager const&)      = delete;
     void operator=(AppManager const&)  = delete;
     // For HMI communication
@@ -34,6 +34,7 @@ public:
 
     // Init stack history screen
     bool reqInitStackHis(uint msgID, QVariant data = QVariant());
+    void clearScrHistoryStack();
 
     // Clear screen cached
     bool reqInitScrCache(uint msgID, QVariant data = QVariant());
@@ -45,24 +46,24 @@ public:
     QStack<uint> getScreenHistory();
     // reset current screen (use in case change language)
     void reqRefreshDisp();
-
+    void reqTrimComponentCached();
     // request handler hardkey event
     void reqEvtHardKeyHandler(int e, int data);
     void addObjectFocus(QObject* obj);
     void remObjectFocus(QObject* obj);
-
+    // remove the top of screen stack (use in case back from quickguide to setup)
+    void clearTopScreenStack();
 private:
-    AppManager(SCREENTYPE_T type);
+    AppManager();
     virtual ~AppManager();
     QList<QObject*> _fObj;
     QStack<uint> scrHistory;
-    SCREENTYPE_T m_screen;
-    SCREENTYPE_T getScrenType();
 
 signals:
     void eventHardKeyHandler(int e, int data);
-    void screenTriggerHandled(SCREENTYPE_T type, MSG_INF m_inf);
-
+    void screenTriggerHandled(MSG_INF m_inf);
+    void onsHistoryChanged();
+    void scrHistoryChanged();
 private:
     bool recieveMsgData(uint msgID, QVariant data);
     bool recieveReqChangeTopMsg(uint msgID, QVariant data);

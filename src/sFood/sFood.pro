@@ -1,9 +1,10 @@
 include(./qtquick2applicationviewer/qtquick2applicationviewer.pri)
 TEMPLATE = app
 
-QT += qml quick core gui
+QT += qml quick core gui widgets
 QT += sql
 QT += network
+QT += gui-private
 CONFIG += c++11
 
 SOURCES += \
@@ -22,7 +23,6 @@ SOURCES += \
     src/HttpServer/qhttprequest.cpp \
     src/HttpServer/qhttpresponse.cpp \
     src/HttpServer/qhttpserver.cpp \
-    src/Model/AppMainModel.cpp \
     src/RestServer/Controller/BaseController.cpp \
     src/RestServer/Controller/SensorController.cpp \
     src/RestServer/Data/WriterIn.cpp \
@@ -31,14 +31,15 @@ SOURCES += \
     src/RestServer/ControllerInfo.cpp \
     src/RestServer/RestServer.cpp \
     src/RestServer/Router.cpp \
-    src/View/AppMainView.cpp \
-    src/AppMainEngine.cpp \
     src/main.cpp \
     src/HttpServer/http-parser/contrib/parsertrace.c \
     src/HttpServer/http-parser/contrib/url_parser.c \
     src/HttpServer/http-parser/bench.c \
     src/HttpServer/http-parser/http_parser.c \
-    src/HttpServer/http-parser/test.c
+    src/HttpServer/http-parser/test.c \
+    src/Model/AppHomeModel.cpp \
+    src/View/AppHomeView.cpp \
+    src/AppHomeEngine.cpp
 
 RESOURCES += qml.qrc
 
@@ -70,7 +71,6 @@ HEADERS += \
     src/HttpServer/qhttpserver.h \
     src/HttpServer/qhttpserverapi.h \
     src/HttpServer/qhttpserverfwd.h \
-    src/Model/AppMainModel.h \
     src/RestServer/Controller/BaseController.h \
     src/RestServer/Controller/SensorController.h \
     src/RestServer/Data/WriterIn.h \
@@ -80,6 +80,10 @@ HEADERS += \
     src/RestServer/ErrorCode.h \
     src/RestServer/RestServer.h \
     src/RestServer/Router.h \
-    src/View/AppMainView.h \
-    src/AppMainEngine.h \
-    src/commonstructs.h
+    src/View/AppHome_ScreenDefs.h \
+    src/View/HMIEvents.h \
+    src/View/AppHomeView.h \
+    src/Model/AppHomeModel.h \
+    src/AppHomeEngine.h \
+    src/AppHomeDefs.h \
+    src/AppHomeEnums.h

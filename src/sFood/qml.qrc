@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/main.qml</file>
-        <file>qml/MainForm.ui.qml</file>
+        <file>js/constant.js</file>
     </qresource>
 </RCC>

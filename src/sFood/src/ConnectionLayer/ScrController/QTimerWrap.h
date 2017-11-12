@@ -8,11 +8,10 @@ class QTimerWrap : public QTimer
 {
     Q_OBJECT
 public:
-    QTimerWrap(int type, unsigned int  targetID);
+    QTimerWrap(unsigned int  targetID);
     ~QTimerWrap();
 private:
     unsigned int p_targetID;      //OnsID
-    int m_screen;
 public slots:
     void timeout_exec();
 };

@@ -1,4 +1,0 @@
-#ifndef COMMONSTRUCTS_H
-#define COMMONSTRUCTS_H
-
-#endif // COMMONSTRUCTS_H
